@@ -40,6 +40,19 @@ architecture Behavioral of dvid_serdes is
   signal tmds_out_blue_t  : std_logic;
   signal tmds_out_clock_t : std_logic;
 
+  component mt9d111_controller
+    port(
+      clk   : IN    std_logic;
+      resend: IN    std_logic;
+      config_finished : out std_logic;
+      siod  : INOUT std_logic;
+      sioc  : OUT   std_logic;
+      reset : OUT   std_logic;
+      pwdn  : OUT   std_logic;
+      xclk  : OUT   std_logic
+    );
+  end component;
+
   component vga_gen
     port(
       clk75   : in  std_logic;
