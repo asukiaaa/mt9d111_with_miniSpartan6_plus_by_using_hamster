@@ -105,6 +105,7 @@ begin
             end case;
 
             if divider = "11111111" then
+               -- causes map error without adding CLOCK_DEDICATED_ROUTE = FALSE to clk50
                busy_sr <= busy_sr(32-2 downto 0) & '0';
                data_sr <= data_sr(32-2 downto 0) & '1';
                divider <= (others => '0');
