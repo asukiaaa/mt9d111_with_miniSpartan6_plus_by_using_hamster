@@ -12,6 +12,14 @@ use UNISIM.vcomponents.all;
 
 entity dvid_serdes is
   port(
+    mt9d111_d     : in    std_logic_vector(7 downto 0);
+    mt9d111_xclk  : out   std_logic;
+    mt9d111_pclk  : in    std_logic;
+    mt9d111_href  : in    std_logic;
+    mt9d111_vsync : in    std_logic;
+    mt9d111_sda   : inout std_logic;
+    mt9d111_scl   : out   std_logic;
+
     clk50      : in  std_logic;
     tmds_out_p : out std_logic_vector(3 downto 0);
     tmds_out_n : out std_logic_vector(3 downto 0);
@@ -40,6 +48,12 @@ architecture Behavioral of dvid_serdes is
   signal tmds_out_blue_t  : std_logic;
   signal tmds_out_clock_t : std_logic;
 
+  signal capture_addr : std_logic_vector(14 downto 0);
+  signal capture_data : std_logic_vector(7 downto 0);
+  signal capture_we   : std_logic_vector(0 downto 0);
+  signal resend       : std_logic;
+  signal config_finished :std_logic;
+
   component mt9d111_controller
     port(
       clk   : IN    std_logic;
@@ -47,9 +61,19 @@ architecture Behavioral of dvid_serdes is
       config_finished : out std_logic;
       siod  : INOUT std_logic;
       sioc  : OUT   std_logic;
-      reset : OUT   std_logic;
-      pwdn  : OUT   std_logic;
       xclk  : OUT   std_logic
+    );
+  end component;
+
+  component mt9d111_capture
+    port(
+      pclk  : in  std_logic;
+      vsync : in  std_logic;
+      href  : in  std_logic;
+      d     : in  std_logic_vector(7 downto 0);
+      addr  : out std_logic_vector(14 downto 0);
+      dout  : out std_logic_vector(7 downto 0);
+      we    : out std_logic
     );
   end component;
 
@@ -99,7 +123,26 @@ begin
 --debug
   leds(0) <= hsync_t;
   leds(1) <= vsync_t;
-  
+
+  i_mt9d111_controller: mt9d111_controller port map(
+    clk   => clk50,
+    xclk  => mt9d111_xclk,
+    sioc  => mt9d111_scl,
+    siod  => mt9d111_sda,
+    resend => resend,
+    config_finished => config_finished
+  );
+
+  i_mt9d111_capture: mt9d111_capture port map(
+    pclk  => mt9d111_pclk,
+    vsync => mt9d111_vsync,
+    href  => mt9d111_href,
+    d     => mt9d111_d,
+    addr  => capture_addr,
+    dout  => capture_data,
+    we    => capture_we(0)
+  );
+
   Inst_clocking: clocking port map(
     clk50m          => clk50,
     pixel_clock     => pixel_clock_t,
